@@ -1,0 +1,64 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+	<style>
+		body {
+			font-family: 'Nanum Myeongjo', serif;
+		}
+		.button {
+			background-color: #ffffff;
+			border: 0.5px solid #aaaaaa;
+			color: black;
+			padding: 4px 12px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 15px;
+			border-radius: 2px;
+			height: 30px;
+		}
+		.button:hover {
+			background-color: #aaaaaa;
+			color: white;
+		}
+	</style>
+	
+	<link href="https://fonts.googleapis.com/css?family=Nanum+Myeongjo&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div>
+        <h3>비밀번호 변경</h3>
+    </div>
+	
+    <form method="POST" action="/mypage/changepw/">
+		<table>
+			{% csrf_token %}
+			<tr>
+				<td>현재 비밀번호: </td>
+				<td><input type="password" name="origin_pw"></td>
+			</tr>
+			<tr>
+				<td>신규 비밀번호: </td>
+				<td><input type="password" name="pw1"></td>
+			</tr>
+			<tr>
+				<td>비밀번호 확인: </td>
+				<td><input type="password" name="pw2"></td>
+			</tr>
+		</table>
+		
+		<br>
+        <div>
+            <input type="submit" value="확인" class="button">
+            <button onclick="window.close();" class="button">취소</button>
+        </div>
+    </form>
+	
+    {%if error %}
+    <p> {{error}} </p>
+    {% endif %}
+	
+</body>
+</html>

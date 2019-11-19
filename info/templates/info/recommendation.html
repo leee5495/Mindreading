@@ -1,0 +1,456 @@
+{%extends "info/list_template.html"%}
+{% load humanize %}
+{% load staticfiles %}
+{% load static %}
+
+{%block title%}Recommendation{%endblock%}
+
+{%block style%}
+	{{block.super}}
+	
+	.hor_book_list {
+		border: 1px solid #dddddd;
+		border-radius: 20px;
+		display: flex;
+		background-color: #fcfcfc;
+	}
+	
+	.tablink {
+		font-family: 'Nanum Myeongjo', serif;
+		background-color: #ffffff;
+		border: 1px solid #aaaaaa;
+		border-bottom: 1px solid white;
+		border-radius: 3px;
+		color: black;
+		padding: 6px 15px;
+		text-align: center;
+		text-decoration: none;
+		display: inline-block;
+		font-size: 17px;
+		height: 30px;
+	}
+	.tablink:hover {
+		background-color: #cccccc;
+		color: white;
+	}
+	
+	.wrapper {
+		display: -ms-inline-grid;
+		display: grid;
+		grid-template-columns: 166px 166px 166px 166px 166px;
+		grid-gap: 10px;
+		color: #444;
+		padding: 10px;
+	}
+	.hor {
+		width: 830px;
+		grid-template-columns: 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px
+		160px 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px;
+		grid-gap: 6px;
+		overflow-x: hidden;
+		padding: 0px;
+		float: left;
+	}
+	.box {
+		padding: 10px;
+		font-size: 150%;
+	}
+	table.book_box {
+		table-layout:fixed;
+	}
+	table.book_box td {
+		width:80px; 
+		word-wrap:break-word;
+	}
+	table.book_box tr.image {
+		height: 230px;
+	}
+	table.book_box tr.title {
+		height: 50px;
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+	table.book_box tr.price {
+		height: 30px;
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+	table.book_box tr.price {
+		height: 0px;
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+
+	.load_button {
+		background-color: #ffffff;
+		border: 0.5px solid #aaaaaa;
+		color: black;
+		padding: 5px 15px;
+		text-align: center;
+		text-decoration: none;
+		font-size: 15px;
+		border-radius: 2px;
+		height: 40px;
+		width: 150px;
+		display: block;
+		margin: 0 auto;
+	}
+	.load_button:hover {
+		background-color: #aaaaaa;
+		color: white;
+	}
+	
+	.arrow {
+		font-weight: bold;
+		float: left;
+		width: 20px;
+		padding: 0px;
+		cursor:pointer
+	}
+	.arrow:hover {
+		color: 269885;
+	}
+	
+	.heart_btn {
+		width: 20px;
+		height: 20px;
+		padding: 0px;
+		border: none;
+		font-size: 0px;
+	}
+	.heart_btn:hover {
+		background:url({% static "info/heart_full.png" %});
+		background-repeat: no-repeat;
+		background-size: 20px 20px;
+	}
+	.like {
+		background:url({% static "info/heart_empty.png" %});
+		background-repeat: no-repeat;
+		background-size: 20px 20px;
+	}
+	.unlike {
+		background:url({% static "info/heart_full.png" %});
+		background-repeat: no-repeat;
+		background-size: 20px 20px;
+	}
+	
+	#top_button {
+	  display: inline-block;
+	  background-color: #75BAAE;
+	  width: 45px;
+	  height: 30px;
+	  text-align: center;
+	  border-radius: 4px;
+	  margin: 30px;
+	  position: fixed;
+	  bottom: 10px;
+	  right: 10px;
+	  z-index: 1000;
+	  transition: background-color .3s, 
+		opacity .5s, visibility .5s;
+	  visibility: hidden;
+	}
+	#top_button:hover {
+	  cursor: pointer;
+	  background-color: #333;
+	}
+	#top_button:active {
+	  background-color: #555;
+	}
+	#top_button::after {
+	  content: "Top";
+	  line-height: 30px;
+	  color: #fff;
+	}
+	
+{%endblock%}
+
+
+{%block content%}
+	<a id="top_button"></a>
+
+	<div style="padding: 10px; padding-top: 20px;">
+		<!--
+		{%if rec_list%}
+			<button class="tablink" onclick="openPage('recommendation', this, '#75BAAE')" id="defaultOpen">Personal recommendation</button>
+		{%endif%}
+		<button class="tablink" onclick="openPage('trending', this, '#75BAAE')" id="secondDefault">Recent best-sellers</button>
+		<button class="tablink" onclick="openPage('bestseller', this, '#75BAAE')">All-time best-sellers</button>
+		-->
+		
+		{%for key, values in rec_pages.items%}
+			<a href="{%url 'info:recommend' key%}" class="tablink" {%if forloop.counter == page_id|add:"0" %}style="background-color:#75BAAE; color:white;"{%endif%}>{{values}}</a>
+		{%endfor%}
+	</div>
+	
+	{% if rec_type == "per_rec" %}
+	<div id="recommendation" class="tabcontent">
+		<div class="wrapper" id="per_rec">
+			{%for object in rec_list%}
+				<div class="box">
+					<table class="book_box">
+						<tr class="image"><td colspan="2">
+							<a href="{%url 'info:book_detail' object.rec.id%}"><image src={{object.rec.image_src}} height="220" width="160" style="border: 1px solid #bbbbbb;"></a>
+						</td></tr>
+						<tr class="title"><td colspan="2">
+							<b><a href="{%url 'info:book_detail' object.rec.id%}">{{object.rec.title}}</a></b>
+						</td></tr>
+						<tr class="price"><td colspan="2">
+							{{object.rec.sale_price|intcomma}}원
+						</td></tr>
+						<tr class="system_score"><td style="width: 120px;">
+							추천도: {{object.score|floatformat:-2}}
+						</td>
+						<td style="width: 30px;">
+								<form method="POST" class="heart-form">
+									{%csrf_token%}
+									{%if object.user_liked%}
+										<input type="submit" class="heart_btn unlike" value="{{object.rec.id}}"/>
+									{%else%}
+										<input type="submit" class="heart_btn like" value="{{object.rec.id}}"/>
+									{%endif%}
+								</form>
+						</td>
+						</tr>
+					</table>
+				</div>
+			{%endfor%}
+		</div>
+		<button id="load-more-comments" class="load_button">Load More</button>
+	</div>
+	
+	{% elif rec_type == "cur_best" %}
+		<!-- 최신 베스트셀러 -->
+		<div id="trending" class="tabcontent">
+			{% for key, values in rec_list.items %}
+				<a href="{%url 'info:book_list_genre' values.id '3' '30' 'None' 'None' 'None' 'None' 'None'%}"><h3>{{key}}</h3></a>
+				
+				<div class="hor_book_list">
+					<div class="arrow left">&laquo;</div>
+					<div class="wrapper hor">
+						{%for object in values.objects%}
+							<div class="box">
+								<table class="book_box">
+									<tr class="image"><td>
+										<a href="{%url 'info:book_detail' object.id%}"><image src={{object.image_src}} height="210" width="150" style="border: 1px solid #bbbbbb;"></a>
+									</td></tr>
+									<tr class="title"><td>
+										<b><a href="{%url 'info:book_detail' object.id%}">{{object.title}}</a></b>
+									</td></tr>
+									<tr class="price"><td>
+										{{object.sale_price|intcomma}}원
+									</td></tr>
+								</table>
+							</div>
+						{%endfor%}
+					</div>
+					<div class="arrow right">&raquo;</div>
+				</div>
+				
+				<br>
+			{%endfor%}
+		</div>
+		
+	{% elif rec_type == "best" %}
+		<!-- 베스트셀러 -->
+		<div id="bestseller" class="tabcontent">
+			{% for key, values in rec_list.items %}
+				<a href="{%url 'info:book_list_genre' values.id '3' '30' 'None' 'None' 'None' 'None' 'None'%}"><h3>{{key}}</h3></a>
+				
+				<div class="hor_book_list">
+					<div class="arrow left">&laquo;</div>
+					<div class="wrapper hor">
+						{%for object in values.objects%}
+							<div class="box">
+								<table class="book_box">
+									<tr class="image"><td>
+										<a href="{%url 'info:book_detail' object.id%}"><image src={{object.image_src}} height="210" width="150" style="border: 1px solid #bbbbbb;"></a>
+									</td></tr>
+									<tr class="title"><td>
+										<b><a href="{%url 'info:book_detail' object.id%}">{{object.title}}</a></b>
+									</td></tr>
+									<tr class="price"><td>
+										{{object.sale_price|intcomma}}원
+									</td></tr>
+								</table>
+							</div>
+						{%endfor%}
+					</div>
+					<div class="arrow right">&raquo;</div>
+				</div>
+				
+				<br>
+			{%endfor%}
+		</div>
+		
+	{% endif %}
+
+	
+	<script>
+		function openPage(pageName,elmnt,color) {
+			var i, tabcontent, tablinks;
+			tabcontent = document.getElementsByClassName("tabcontent");
+			for (i = 0; i < tabcontent.length; i++) {
+				tabcontent[i].style.display = "none";
+			}
+			tablinks = document.getElementsByClassName("tablink");
+			for (i = 0; i < tablinks.length; i++) {
+				tablinks[i].style.backgroundColor = "";
+				tablinks[i].style.color = "black";
+			}
+			document.getElementById(pageName).style.display = "block";
+			elmnt.style.backgroundColor = color;
+			elmnt.style.color = "white";
+		}
+
+		// Get the element with id="defaultOpen" and click on it
+		{%if rec_list%}
+			document.getElementById("defaultOpen").click();
+		{%else%}
+			document.getElementById("secondDefault").click();
+		{%endif%}
+	</script>
+	
+	<script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+	
+	<script>
+		$(document).ready(function(){
+
+			
+		});
+	</script>
+
+	<script>
+		$(document).ready(function() {
+
+			$('.left').click(function(){
+				$item = $(this).siblings('.hor');
+				$item_step = $item.width();
+				$index = $item.scrollLeft()/$item_step;
+				
+				if($index > 0){
+					$item.animate({scrollLeft: Math.ceil($item_step*($index-1))});
+				}
+			});
+			
+			$('.right').click(function(){
+				$item = $(this).siblings('.hor');
+				$item_step = $item.width();
+				$index = $item.scrollLeft()/$item_step;
+				
+				if(Math.ceil($item_step*($index+1)) < $item_step*4){
+					$item.animate({scrollLeft: Math.ceil($item_step*($index+1))});
+				} else {
+					$item.animate({scrollLeft: Math.ceil($item_step*4)});
+				}
+			});
+			
+		});
+	</script>
+	
+	<script>
+		$(document).ready(function() {
+		
+			function getCookie(name) {
+				var cookieValue = null;
+				if(document.cookie && document.cookie != '') {
+					var cookies = document.cookie.split(';');
+					for(var i = 0; i < cookies.length; i++) {
+						var cookie = jQuery.trim(cookies[i]);
+						if(cookie.substring(0, name.length + 1) == (name + '=')) {
+							cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+							break;
+						}
+					}
+				}
+				return cookieValue;
+			}
+
+			$.ajaxSetup({
+				global: true,
+				beforeSend: function(xhr, settings) {
+					if(!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+						xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+						xhr.setRequestHeader("Content-Type", 'application/x-www-form-urlencoded; charset=UTF-8');
+					}
+				}
+			});
+			
+			$('.heart-form').submit(function(event){
+				event.preventDefault();
+				
+				$input = $(this).children('.heart_btn');
+				$name = $input.attr('class').split(" ")[1];
+				$val = $input.val();
+				
+				console.log($val); 
+				
+				$.ajax({
+					url: "{%url 'info:recommend' page_id%}",
+					data: {name: $name, val: $val},
+					dataType: 'json',
+					contentType: 'json',
+					type : "POST",
+					success: function (data) {
+						console.log($input.attr('class')); 
+						if($input.attr('class')=="heart_btn like") {
+							$input.attr('class', 'heart_btn unlike');
+						} 
+						else if($input.attr('class')=="heart_btn unlike") {
+							$input.attr('class', 'heart_btn like');
+						}
+						console.log($input.attr('class')); 
+					}
+				});
+			});
+		});
+	</script>
+	
+	<script>
+
+		jQuery(document).ready(function() {
+		  
+		  var btn = $('#top_button');
+
+		  $(window).scroll(function() {
+			if ($(window).scrollTop() > 300) {
+			  btn.css("visibility", "visible");
+			} else {
+			  btn.css("visibility", "hidden");
+			}
+		  });
+
+		  btn.on('click', function(e) {
+			e.preventDefault();
+			$('html, body').animate({scrollTop:0}, '300');
+		  });
+
+		});
+
+	</script>
+	
+	<script>
+		$(document).ready(function(){
+			var list = $("#per_rec div");
+			var numToShow = 20;
+			var button = $("#load-more-comments");
+			var numInList = list.length;
+			list.hide();
+			if (numInList <= numToShow) {
+				button.hide();
+			}
+			list.slice(0, numToShow).show();
+				
+			button.click(function(){
+				console.log(list);
+				var showing = list.filter(':visible').length;
+				list.slice(showing - 1, showing + numToShow).fadeIn();
+				var nowShowing = list.filter(':visible').length;
+				if (nowShowing >= numInList) {
+					button.hide();
+				}
+			});
+		});
+	</script>
+	
+{%endblock content%}

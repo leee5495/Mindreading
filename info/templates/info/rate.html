@@ -1,0 +1,388 @@
+{%extends "info/list_template.html"%}
+{% load humanize %}
+{% load staticfiles %}
+{% load static %}
+
+{%block title%}Rate more books{%endblock%}
+
+{%block style%}
+	{{block.super}}
+	
+	.hor_book_list {
+		border: 1px solid #bbbbbb;
+		border-radius: 20px;
+		display: flex;
+	}
+	
+	.tablink {
+		font-family: 'Nanum Myeongjo', serif;
+		background-color: #ffffff;
+		border: 1px solid #aaaaaa;
+		border-bottom: 1px solid white;
+		border-radius: 3px;
+		color: black;
+		padding: 6px 15px;
+		text-align: center;
+		text-decoration: none;
+		display: inline-block;
+		font-size: 17px;
+		height: 30px;
+	}
+	.tablink:hover {
+		background-color: #cccccc;
+		color: white;
+	}
+	
+	.wrapper {
+		display: -ms-inline-grid;
+		display: grid;
+		grid-template-columns: 166px 166px 166px 166px 166px;
+		grid-gap: 10px;
+		color: #444;
+		padding: 10px;
+	}
+	.hor {
+		width: 830px;
+		grid-template-columns: 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px
+		160px 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px;
+		grid-gap: 6px;
+		overflow-x: hidden;
+		padding: 0px;
+		float: left;
+	}
+	.box {
+		padding: 10px;
+		font-size: 150%;
+	}
+	table.book_box {
+		table-layout:fixed;
+	}
+	table.book_box td {
+		width:80px; 
+		word-wrap:break-word;
+	}
+	table.book_box tr.image {
+		height: 230px;
+	}
+	table.book_box tr.title {
+		height: 50px;
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+	table.book_box tr.price {
+		height: 30px;
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+	table.book_box tr.price {
+		height: 0px;
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+
+	.load_button {
+		background-color: #ffffff;
+		border: 0.5px solid #aaaaaa;
+		color: black;
+		padding: 5px 15px;
+		text-align: center;
+		text-decoration: none;
+		font-size: 15px;
+		border-radius: 2px;
+		height: 40px;
+		width: 150px;
+		display: block;
+		margin: 0 auto;
+	}
+	.load_button:hover {
+		background-color: #aaaaaa;
+		color: white;
+	}
+	
+	.arrow {
+		font-weight: bold;
+		float: left;
+		width: 20px;
+		padding: 0px;
+	}
+	.arrow:hover {
+		color: 269885;
+	}
+	
+	.heart_btn {
+		width: 20px;
+		height: 20px;
+		padding: 0px;
+		border: none;
+		font-size: 0px;
+	}
+	.heart_btn:hover {
+		background:url({% static "info/heart_full.png" %});
+		background-repeat: no-repeat;
+		background-size: 20px 20px;
+	}
+	.like {
+		background:url({% static "info/heart_empty.png" %});
+		background-repeat: no-repeat;
+		background-size: 20px 20px;
+	}
+	.unlike {
+		background:url({% static "info/heart_full.png" %});
+		background-repeat: no-repeat;
+		background-size: 20px 20px;
+	}
+	
+	#top_button {
+	  display: inline-block;
+	  background-color: #75BAAE;
+	  width: 45px;
+	  height: 30px;
+	  text-align: center;
+	  border-radius: 4px;
+	  margin: 30px;
+	  position: fixed;
+	  bottom: 10px;
+	  right: 10px;
+	  z-index: 1000;
+	  transition: background-color .3s, 
+		opacity .5s, visibility .5s;
+	  visibility: hidden;
+	}
+	#top_button:hover {
+	  cursor: pointer;
+	  background-color: #333;
+	}
+	#top_button:active {
+	  background-color: #555;
+	}
+	#top_button::after {
+	  content: "Top";
+	  line-height: 30px;
+	  color: #fff;
+	}
+
+
+{%endblock%}
+
+
+{%block content%}
+	<a id="top_button"></a>
+
+	{%if not user%}
+	
+	<div style="text-align: center; padding: 40px;">
+		<p>로그인 후 이용가능한 서비스입니다. 로그인을 해주세요.</p>
+		<a href="/" style="text-size: 15px;">Login</a>
+	</div>
+	
+	{%else%}
+	
+	<div style="padding: 10px; padding-top: 20px;">
+		{%for key, values in genre_names.items%}
+			<a href="{%url 'info:rate' key%}" class="tablink" {%if forloop.counter == page_id|add:"0" %}style="background-color:#75BAAE; color:white;"{%endif%}>{{values}}</a>
+		{%endfor%}
+	</div>
+
+	<div class="wrapper" id="book_list">
+		{%for object in object_list.books%}
+			<div class="box">
+				<table class="book_box">
+					<tr class="image"><td colspan="2">
+						<a href="{%url 'info:book_detail' object.book.id%}"><image src={{object.book.image_src}} height="220" width="160" style="border: 1px solid #bbbbbb;"></a>
+					</td></tr>
+					<tr class="title"><td colspan="2">
+						<b><a href="{%url 'info:book_detail' object.book.id%}">{{object.book.title}}</a></b>
+					</td></tr>
+					<tr class="price"><td colspan="2">
+						{{object.author.author.name}}
+						{{object.book.author}}
+					</td></tr>
+					<tr class="rating"><td colspan="2">
+						<form method="post">
+							{%csrf_token%}
+							<input type="hidden" class="book_id" value={{object.book.id}}>
+							<input type="hidden" class="rating_val" value={{object.user_rated.rating}}>
+							{{object.book.rating}}
+							{%for i in '12345'|make_list%}
+								{%if forloop.counter <= object.user_rated.rating%}
+									<span class="star" name={{i}}><img src="{% static "info/star_full.png" %}" height="20" width="20"></span>
+								{%else%}
+									<span class="star" name={{i}}><img src="{% static "info/star_empty.png" %}" height="20" width="20"></span>
+								{%endif%}
+							{%endfor%}
+						</form>
+					</td></tr>
+				</table>
+			</div>
+		{%endfor%}
+	</div>
+	<button id="load-more" class="load_button">Load More</button>
+	
+	{%endif%}
+
+
+	
+	<script>
+		function openPage(pageName,elmnt,color) {
+			var i, tabcontent, tablinks;
+			tabcontent = document.getElementsByClassName("tabcontent");
+			for (i = 0; i < tabcontent.length; i++) {
+				tabcontent[i].style.display = "none";
+			}
+			tablinks = document.getElementsByClassName("tablink");
+			for (i = 0; i < tablinks.length; i++) {
+				tablinks[i].style.backgroundColor = "";
+				tablinks[i].style.color = "black";
+			}
+			document.getElementById(pageName).style.display = "block";
+			elmnt.style.backgroundColor = color;
+			elmnt.style.color = "white";
+		}
+
+		// Get the element with id="defaultOpen" and click on it
+		document.getElementById("defaultOpen").click();
+	</script>
+	
+	<script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+	
+	<script>
+		$(document).ready(function(){
+			var list = $("#book_list div");
+			var numToShow = 20;
+			var button = $("#load-more");
+			var numInList = list.length;
+			list.hide();
+			if (numInList <= numToShow) {
+				button.hide();
+			}
+			list.slice(0, numToShow).show();
+			
+			button.click(function(){
+				console.log(list);
+				var showing = list.filter(':visible').length;
+				list.slice(showing - 1, showing + numToShow).fadeIn();
+				var nowShowing = list.filter(':visible').length;
+				if (nowShowing >= numInList) {
+					button.hide();
+				}
+			});
+		});
+	</script>
+	
+	<script>
+		$(document).ready(function() {
+		
+			function getCookie(name) {
+				var cookieValue = null;
+				if(document.cookie && document.cookie != '') {
+					var cookies = document.cookie.split(';');
+					for(var i = 0; i < cookies.length; i++) {
+						var cookie = jQuery.trim(cookies[i]);
+						if(cookie.substring(0, name.length + 1) == (name + '=')) {
+							cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+							break;
+						}
+					}
+				}
+				return cookieValue;
+			}
+
+			$.ajaxSetup({
+				global: true,
+				beforeSend: function(xhr, settings) {
+					if(!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+						xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+						xhr.setRequestHeader("Content-Type", 'application/x-www-form-urlencoded; charset=UTF-8');
+					}
+				}
+			});
+			
+
+			$(".star").click( function(){
+				var rating_field = $(this).siblings(".rating_val")
+				var book_id_field = $(this).siblings(".book_id")
+				
+				var count = parseInt($(this).attr("name"));
+				var prev = parseInt(rating_field.val());
+				
+				if (prev==1&&count==1){
+					if( !confirm('Delete rating?') ){
+						return;
+					}
+					rating_field.val("null");
+					count = 0;
+				}
+				else{
+					rating_field.val(count);
+				}
+				
+				var full_imgsrc = "/static/info/star_full.png";
+				var empty_imgsrc = "/static/info/star_empty.png";
+				
+				console.log(rating_field.val()); 
+				console.log(book_id_field.val()); 
+				
+				var star1 = $(this).parent().find(".star[name='1'] img");
+				var star2 = $(this).parent().find(".star[name='2'] img");
+				var star3 = $(this).parent().find(".star[name='3'] img");
+				var star4 = $(this).parent().find(".star[name='4'] img");
+				var star5 = $(this).parent().find(".star[name='5'] img");
+				var star_all = $(this).parent().find(".star img")
+				
+				console.log(star_all); 
+				
+				$.ajax({
+					url: "{%url 'info:rate' page_id%}",
+					data: {book_id: book_id_field.val(), rating: rating_field.val()},
+					dataType: 'json',
+					contentType: 'json',
+					type : "POST",
+					success: function (data) {
+						star_all.attr("src",empty_imgsrc);
+						
+						if(count>=1) {
+							star1.attr("src",full_imgsrc);
+						}
+						if(count>=2) {
+							star2.attr("src",full_imgsrc);
+						}
+						if(count>=3) {
+							star3.attr("src",full_imgsrc);
+						}
+						if(count>=4) {
+							star4.attr("src",full_imgsrc);
+						}
+						if(count>=5) {
+							star5.attr("src",full_imgsrc);
+						}
+						console.log("success"); 
+					}
+				});
+			});
+		});
+	</script>
+	
+	<script>
+
+		jQuery(document).ready(function() {
+		  
+		  var btn = $('#top_button');
+
+		  $(window).scroll(function() {
+			if ($(window).scrollTop() > 300) {
+			  btn.css("visibility", "visible");
+			} else {
+			  btn.css("visibility", "hidden");
+			}
+		  });
+
+		  btn.on('click', function(e) {
+			e.preventDefault();
+			$('html, body').animate({scrollTop:0}, '300');
+		  });
+
+		});
+
+	</script>
+	
+{%endblock content%}

@@ -1,0 +1,387 @@
+{%extends "info/list_template.html"%}
+{%load static%}
+{% load humanize %}
+
+{%block title%}My page{%endblock%}
+
+{%block style%}
+	{{block.super}}
+	
+	.tablink {
+		font-family: 'Nanum Myeongjo', serif;
+		background-color: #ffffff;
+		border: 1px solid #aaaaaa;
+		border-bottom: 1px solid white;
+		border-radius: 3px;
+		color: black;
+		padding: 6px 15px;
+		text-align: center;
+		text-decoration: none;
+		display: inline-block;
+		font-size: 17px;
+		height: 30px;
+	}
+	.tablink:hover {
+		background-color: #cccccc;
+		color: white;
+	}
+	
+	.wrapper {
+		display: -ms-inline-grid;
+		display: grid;
+		grid-template-columns: 166px 166px 166px 166px 166px;
+		grid-gap: 10px;
+		color: #444;
+		padding: 10px;
+	}
+	.hor {
+		width: 830px;
+		grid-template-columns: 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px
+		160px 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px 160px;
+		grid-gap: 6px;
+		overflow-x: hidden;
+		padding: 0px;
+		float: left;
+	}
+	.box {
+		padding: 10px;
+		font-size: 150%;
+	}
+	table.book_box {
+		table-layout:fixed;
+	}
+	table.book_box td {
+		width:80px; 
+		word-wrap:break-word;
+	}
+	table.book_box tr.image {
+		height: 230px;
+	}
+	table.book_box tr.title {
+		height: 50px;
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+	
+	.heart_btn {
+		width: 20px;
+		height: 20px;
+		padding: 0px;
+		border: none;
+		font-size: 0px;
+	}
+	.heart_btn:hover {
+		background:url({% static "info/heart_full.png" %});
+		background-repeat: no-repeat;
+		background-size: 20px 20px;
+	}
+	.like {
+		background:url({% static "info/heart_empty.png" %});
+		background-repeat: no-repeat;
+		background-size: 20px 20px;
+	}
+	.unlike {
+		background:url({% static "info/heart_full.png" %});
+		background-repeat: no-repeat;
+		background-size: 20px 20px;
+	}
+	
+	.load_button {
+		background-color: #ffffff;
+		border: 0.5px solid #aaaaaa;
+		color: black;
+		padding: 5px 15px;
+		text-align: center;
+		text-decoration: none;
+		font-size: 15px;
+		border-radius: 2px;
+		height: 40px;
+		width: 150px;
+		display: block;
+		margin: 0 auto;
+	}
+	.load_button:hover {
+		background-color: #aaaaaa;
+		color: white;
+	}
+	
+	.delete_btn {
+		border: none;
+		background-color: white;
+		width: auto;
+	}
+	.delete_btn:hover {
+		color: 269885;
+	}
+
+{%endblock%}
+
+{%block content%}
+
+	<div style="padding: 10px; padding-top: 20px;">
+		<button class="tablink" onclick="openPage('liked_books', this, '#75BAAE')" id="DefaultOpen">Liked books</button>
+		<button class="tablink" onclick="openPage('rated_books', this, '#75BAAE')" id="ratingOpen">Rated books</button>
+		<button class="tablink" onclick="openPage('personal', this, '#75BAAE')">Personal info</button>
+	</div>
+	
+	<div id="liked_books" class="tabcontent">
+		<div class="wrapper" id="liked_items">
+			{%for object in liked_books%}
+				<div class="box">
+					<table class="book_box">
+						<tr class="image"><td colspan="2">
+							<a href="{%url 'info:book_detail' object.book.id%}"><image src={{object.book.image_src}} height="220" width="160" style="border: 1px solid #bbbbbb;"></a>
+						</td></tr>
+						<tr class="title"><td colspan="2">
+							<b><a href="{%url 'info:book_detail' object.book.id%}">{{object.book.title}}</a></b>
+						</td></tr>
+						<tr class="price"><td>
+							{{object.book.sale_price|intcomma}}원
+						</td>
+						<td style="width: 30px;">
+								<form method="POST" class="heart-form">
+									{%csrf_token%}
+									<input type="submit" class="heart_btn unlike" value="{{object.book.id}}"/>
+								</form>
+						</td></tr>
+					</table>
+				</div>
+			{%endfor%}
+		</div>
+		<button id="load-more-like" class="load_button">Load More</button>
+	</div>
+	
+	<div id="rated_books" class="tabcontent">
+		<div class="wrapper" id="rated_items">
+			{%for object in rated_books%}
+				<div class="box">
+					<table class="book_box">
+						<tr class="image"><td colspan="2">
+							<a href="{%url 'info:book_detail' object.book.id%}"><image src={{object.book.image_src}} height="220" width="160" style="border: 1px solid #bbbbbb;"></a>
+						</td></tr>
+						<tr class="title"><td colspan="2">
+							<b><a href="{%url 'info:book_detail' object.book.id%}">{{object.book.title}}</a></b>
+						</td></tr>
+						<tr class="price"><td>
+							{{object.book.sale_price|intcomma}}원
+						</td>
+						<td style="width: 30px;">
+								<form method="POST" class="heart-form">
+									{%csrf_token%}
+									{%if object.user_liked%}
+										<input type="submit" class="heart_btn unlike" value="{{object.book.id}}"/>
+									{%else%}
+										<input type="submit" class="heart_btn like" value="{{object.book.id}}"/>
+									{%endif%}
+								</form>
+						</td></tr>
+						<tr class="rating"><td>
+							{%for i in '01234'|make_list%}
+								{%if forloop.counter <= object.rating%}
+									<img src="{% static "info/star_full.png" %}" height="17" width="17">
+								{%else%}
+									<img src="{% static "info/star_empty.png" %}" height="17" width="17">
+								{%endif%}
+							{%endfor%}
+						</td><td style="width: 20px;">
+							<form method="post" action="/mypage/">
+								{%csrf_token%}
+								<input type="hidden" name="delete_id" value="{{object.book.id}}">
+								<input type="submit" name="delete" value="[x]" class="delete_btn"/>
+							</form>
+						</td></tr>
+					</table>
+				</div>
+			{%endfor%}
+		</div>
+		<button id="load-more-rated" class="load_button">Load More</button>
+	</div>
+	
+	<div id="personal" class="tabcontent" style="padding: 10px; padding-left: 40px;">
+		<h3> 회원정보 </h3>
+
+		<table>
+			<tr>
+				<td>아이디: </td>
+				<td>{{user.username}}</td>
+			</tr>
+			<tr>
+				<td>이메일: </td>
+				<td>{{user.email}}</td>
+			</tr>
+			<tr>
+				<td>비밀번호: </td>
+				<td>******</td>
+				<td><button onclick="changePW()" class="button" style="height: 25px; font-size: 12px;">비밀번호 변경</button></td>
+			</tr>
+		</table>
+
+		<br>
+		<button onclick="withDrawal()" class="button">회원탈퇴</button>
+	</div>
+	
+	
+	<script>
+		function openPage(pageName,elmnt,color) {
+			var i, tabcontent, tablinks;
+			tabcontent = document.getElementsByClassName("tabcontent");
+			for (i = 0; i < tabcontent.length; i++) {
+				tabcontent[i].style.display = "none";
+			}
+			tablinks = document.getElementsByClassName("tablink");
+			for (i = 0; i < tablinks.length; i++) {
+				tablinks[i].style.backgroundColor = "";
+				tablinks[i].style.color = "black";
+			}
+			document.getElementById(pageName).style.display = "block";
+			elmnt.style.backgroundColor = color;
+			elmnt.style.color = "white";
+		}
+
+		// Get the element with id="defaultOpen" and click on it
+		{%if not rating_default%}
+			document.getElementById("DefaultOpen").click();
+		{%else%}
+			document.getElementById("ratingOpen").click();
+		{%endif%}
+		
+	</script>
+	
+	<script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+	
+	<script>
+		$(document).ready(function(){
+
+			var list = $("#liked_items div");
+			var numToShow = 10;
+			var button = $("#load-more-like");
+			var numInList = list.length;
+			list.hide();
+			if (numInList <= numToShow) {
+				button.hide();
+			}
+			list.slice(0, numToShow).show();
+
+			button.click(function(){
+				var showing = list.filter(':visible').length;
+				list.slice(showing - 1, showing + numToShow).fadeIn();
+				var nowShowing = list.filter(':visible').length;
+				if (nowShowing >= numInList) {
+					button.hide();
+				}
+			});
+		});
+	</script>
+	
+	<script>
+		$(document).ready(function(){
+
+			var list = $("#rated_items div");
+			var numToShow = 10;
+			var button = $("#load-more-rated");
+			var numInList = list.length;
+			list.hide();
+			if (numInList <= numToShow) {
+				button.hide();
+			}
+			list.slice(0, numToShow).show();
+
+			button.click(function(){
+				var showing = list.filter(':visible').length;
+				list.slice(showing - 1, showing + numToShow).fadeIn();
+				var nowShowing = list.filter(':visible').length;
+				if (nowShowing >= numInList) {
+					button.hide();
+				}
+			});
+		});
+	</script>
+	
+	<script>
+		$(document).ready(function() {
+		
+			function getCookie(name) {
+				var cookieValue = null;
+				if(document.cookie && document.cookie != '') {
+					var cookies = document.cookie.split(';');
+					for(var i = 0; i < cookies.length; i++) {
+						var cookie = jQuery.trim(cookies[i]);
+						if(cookie.substring(0, name.length + 1) == (name + '=')) {
+							cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+							break;
+						}
+					}
+				}
+				return cookieValue;
+			}
+
+			$.ajaxSetup({
+				global: true,
+				beforeSend: function(xhr, settings) {
+					if(!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+						xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+						xhr.setRequestHeader("Content-Type", 'application/x-www-form-urlencoded; charset=UTF-8');
+					}
+				}
+			});
+			
+			$('.heart-form').submit(function(event){
+				event.preventDefault();
+				
+				$input = $(this).children('.heart_btn');
+				$name = $input.attr('class').split(" ")[1];
+				$val = $input.val();
+				
+				console.log($val); 
+				
+				$.ajax({
+					url: '/mypage/',
+					data: {name: $name, val: $val},
+					dataType: 'json',
+					contentType: 'json',
+					type : "POST",
+					success: function (data) {
+						console.log($input.attr('class')); 
+						if($input.attr('class')=="heart_btn like") {
+							$input.attr('class', 'heart_btn unlike');
+						} 
+						else if($input.attr('class')=="heart_btn unlike") {
+							$input.attr('class', 'heart_btn like');
+						}
+						console.log($input.attr('class')); 
+					}
+				});
+			});
+		});
+	</script>
+	
+	<script>
+		function changePW(){
+		var url = "/mypage/changepw";
+		var option = "width=370, height=360, top=200, left=800, resizable=no, scrollbars=no, status=no;";
+		
+		window.open(url, "", option);
+	}
+	</script>
+
+	<script>
+		function withDrawal(){
+			var url = "/mypage/deleteUser";
+			var option = "width=370, height=360, top=200, left=800, resizable=no, scrollbars=no, status=no;";
+			
+			window.open(url, "", option);
+		}
+	</script>
+	
+	<script>
+		$(document).ready(function() {
+			$(".delete_btn").click(function(event) {
+				if( !confirm('Delete?') ){
+					event.preventDefault();
+				} 
+
+			});
+		});
+	</script>
+		
+{%endblock%}

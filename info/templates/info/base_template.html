@@ -1,0 +1,120 @@
+﻿<!DOCTYPE html>
+{% load static %}
+
+<html lang='en'>
+
+<head>
+	
+	<title>{%block title%}Home{%endblock%}</title>
+  
+	<style>
+	{%block style%}
+	
+		body {
+			font-family: 'Nanum Myeongjo', serif;
+		}
+		
+		a:link {
+			color: 161616;
+		}
+		a:visited {
+			color: 161616;
+		}
+		a:hover {
+			color: 269885;
+		}
+		a:active {
+			color: 269885;
+		}
+		
+		div {
+			margin: auto;
+			width: 900px;
+		}
+		div.menu {
+			background-color: #dfdfdf;
+			padding: 10px;
+		}
+		
+		.button {
+			background-color: #ffffff;
+			border: 0.5px solid #aaaaaa;
+			color: black;
+			padding: 4px 12px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 15px;
+			border-radius: 2px;
+			height: 30px;
+		}
+		.button:hover {
+			background-color: #aaaaaa;
+			color: white;
+		}
+		
+		.text_in {
+			width: 250px; 
+			height: 30px;
+		}
+		.option_in {
+			height: 30px;
+		}
+		
+	{%endblock%}
+	</style>
+
+	{%block scripts%}
+		<script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
+		<script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+		<link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel = "stylesheet">
+		<!-- font -->
+		<link href="https://fonts.googleapis.com/css?family=Nanum+Myeongjo&display=swap" rel="stylesheet">
+	{%endblock%}
+  
+</head>
+
+<body>
+
+	<div><table style="width: 100%; padding: 15px;">
+		<tr><td>
+			<a href='/book/'><img src="{% static "info/logo.png" %}" alt="Mind Reading" height="80" width="200" id="logo" class="center"></a>
+		</td>
+		<td>
+			{%if search_form%}
+				<form action="/search/" method="post">
+					{%csrf_token%}
+					{{search_form.search_type}}
+					{{search_form.search_term}}
+					<input type="submit" value="Search" class="button"/> <a href="{%url 'info:detail_search'%}" style="font-size: 12px;">Advanced search</a>
+				</form>
+			{%endif%}
+		</td>
+		<td>
+			{%if user%}
+				<a href="/logout/" style="text-size: 15px;">Logout</a> /
+				<a href="/mypage/" style="text-size: 15px;">My page</a>
+			{%else%}
+				<a href="/" style="text-size: 15px;">Login</a>
+			{%endif%}
+		</td></tr>
+	</table></div>
+			
+	<div class="menu">
+		<h3><ul class="listHorizontal">
+			<li><a href="/book/" style="text-decoration: none;">Book list</a></li>
+			<li><a href="{%url 'info:recommend' 1%}" style="text-decoration: none;">Get recommendations</a></li>
+			<li><a href="{%url 'info:rate' 1%}" style="text-decoration: none;">Rate more books</a></li>
+		</h3></ul>
+	</div>
+	
+	{%block sidebar%}{%endblock%}
+	
+	<div class="content">
+		{%block content%}{%endblock%}
+	</div>
+  
+</body>
+
+</html>
+

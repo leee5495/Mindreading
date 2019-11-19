@@ -1,0 +1,108 @@
+﻿{%extends "info/book_list.html"%}
+{% load humanize %}
+
+{%block title%}{{search_term}} 검색결과{%endblock%}
+
+{%block style%}
+	{{block.super}}
+	
+	.wrapper {
+		display: -ms-inline-grid;
+		display: grid;
+		grid-template-columns: 166px 166px 166px 166px 166px;
+		grid-gap: 10px;
+		color: #444;
+		padding: 10px;
+	}
+	.box {
+		padding: 10px;
+		font-size: 150%;
+	}
+	table.book_box {
+		table-layout:fixed;
+	}
+	table.book_box td {
+		width:160px; 
+		word-wrap:break-word;
+	}
+	table.book_box tr.image {
+		height: 230px;
+	}
+	table.book_box tr.title {
+		height: 50px;
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+	table.book_box tr.price {
+		height: 30px;
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+	
+	.text_list {
+		padding: 10px;
+	}
+	
+{%endblock%}
+
+{%block content%}
+	<h2>"{{search_term}}"에 대한 검색 결과</h2>
+	
+	{%if search_type == "1" or search_type == "2"%} 
+		<h3>책</h3>
+		
+		<div class="wrapper">
+			{%for object in object_list.book%}
+				<div class="box">
+					<table class="book_box">
+						<tr class="image"><td>
+							<a href="{%url 'info:book_detail' object.id%}"><image src={{object.image_src}} height="220" width="160" style="border: 1px solid #bbbbbb;"></a>
+						</td></tr>
+						<tr class="title"><td>
+							<b><a href="{%url 'info:book_detail' object.id%}">{{object.title}}</a></b>
+						</td></tr>
+						<tr class="price"><td>
+							{{object.sale_price|intcomma}}원
+						</td></tr>
+					</table>
+				</div>
+			{%endfor%}
+		</div>
+	
+	{%endif%}
+	
+	{%if search_type == "1" or search_type == "3"%}
+		<h3>작가</h3>
+		<div class="text_list">
+			<ul class="text_list">
+				{%for object in object_list.author%}
+					<li><a href="{%url 'info:grid_detail' 'author' object.id%}">{{object.name}}</a></li>
+				{%endfor%}
+			</ul>
+		</div>
+	{%endif%}
+	
+	{%if search_type == "1" or search_type == "4"%}
+		<h3>장르</h3>
+		<div class="text_list">
+			<ul class="ext_list">
+				{%for object in object_list.genre%}
+				<li><a href="{%url 'info:book_list_genre' object.id '1' '30' 'None' 'None' 'None' 'None' 'None'%}">{{object.name}}</a></li>
+				{%endfor%}
+			</ul>
+		</div>
+	{%endif%}
+
+	{%if search_type == "1" or search_type == "5"%}
+		<h3>출판사</h3>
+		<div class="text_list">
+			<ul class="text_list">
+				{%for object in object_list.publisher%}
+					<li><a href="{%url 'info:grid_detail' 'publisher' object.id%}">{{object.name}}</a></li>
+				{%endfor%}
+			</ul>
+		</div>
+	{%endif%}
+
+{%endblock content%}
+

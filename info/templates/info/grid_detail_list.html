@@ -1,0 +1,103 @@
+﻿{%extends "info/book_list.html"%}
+{% load humanize %}
+{% load static %}
+
+{%block title%}{{object.name}}{%endblock%}
+
+{%block style%}
+	{{block.super}}	
+	h2.listname {
+		text-align: left;
+		padding: 10px;
+	}
+	
+	h3.listsubname {
+		text-indent: 30;
+	}
+	
+	.wrapper {
+		display: -ms-inline-grid;
+		display: grid;
+		grid-template-columns: 166px 166px 166px 166px 166px;
+		grid-gap: 10px;
+		color: #444;
+		padding: 10px;
+	}
+	.box {
+		padding: 10px;
+		font-size: 150%;
+	}
+	table.book_box {
+		table-layout:fixed;
+	}
+	table.book_box td {
+		width:160px; 
+		word-wrap:break-word;
+	}
+	table.book_box tr.image {
+		height: 230px;
+	}
+	table.book_box tr.title {
+		height: 50px;
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+	table.book_box tr.price {
+		height: 30px;
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+{%endblock%}
+
+{%block content%}
+
+	<h2 class="listname">{%block listname%}{{object.name}}{%endblock%}</h2>
+	<h3 class="listsubname">{%block sublistname%}{{subname}}{%endblock%}</h3>
+
+	<div class="wrapper">
+		{%for object in object_list%}
+			<div class="box">
+				{%if not is_user%}
+					<table class="book_box">
+						<tr class="image"><td>
+							<a href="{%url 'info:book_detail' object.id%}"><image src={{object.image_src}} height="220" width="160" style="border: 1px solid #bbbbbb;"></a>
+						</td></tr>
+						<tr class="title"><td>
+							<b><a href="{%url 'info:book_detail' object.id%}">{{object.title}}</a></b>
+						</td></tr>
+						<tr class="price"><td>
+							{{object.sale_price|intcomma}}원
+						</td></tr>
+					</table>
+				{%else%}
+					<table class="book_box">
+						<tr class="image"><td>
+							<a href="{%url 'info:book_detail' object.book.id%}"><image src={{object.book.image_src}} height="220" width="160" style="border: 1px solid #bbbbbb;"></a>
+						</td></tr>
+						<tr class="title"><td>
+							<b><a href="{%url 'info:book_detail' object.book.id%}">{{object.book.title}}</a></b>
+						</td></tr>
+						<tr class="price"><td>
+							{{object.book.sale_price|intcomma}}원
+						</td></tr>
+						<tr class="rating"><td>
+							{%for i in '01234'|make_list%}
+								{%if forloop.counter <= object.rating%}
+									<img src="{% static "info/star_full.png" %}" height="17" width="17">
+								{%else%}
+									<img src="{% static "info/star_empty.png" %}" height="17" width="17">
+								{%endif%}
+							{%endfor%}
+						</td></tr>
+					</table>
+				{%endif%}
+			</div>
+		{%endfor%}
+	</div>
+
+	{%block pagination%}
+		{{block.super}}
+	{%endblock%}
+	
+{%endblock content%}
+

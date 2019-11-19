@@ -1,0 +1,93 @@
+{% load static %}
+
+<html>
+
+<head>
+	
+	<title>Sign up</title>
+	
+	<style>
+	{%block style%}
+	
+		body {
+			font-family: 'Nanum Myeongjo', serif;
+		}
+	
+		div {
+			margin: auto;
+			padding: 10px;
+			width: 900px;
+		}
+		
+		a:link {
+			color: 161616;
+		}
+		a:visited {
+			color: 161616;
+		}
+		a:hover {
+			color: 269885;
+		}
+		a:active {
+			color: 269885;
+		}
+		
+		div.logo {
+			padding: 30px;
+		}
+		
+		.center {
+			display: block;
+			margin-left: auto;
+			margin-right: auto;
+		}
+
+		.button {
+			background-color: #269885;
+			border: none;
+			color: white;
+			padding: 5px 15px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 15px;
+			border-radius: 4px;
+		}
+		.button:hover {
+			opacity: 0.8;
+			color: white;
+		}
+		
+	{%endblock%}
+	</style>
+	
+	<link href="https://fonts.googleapis.com/css?family=Nanum+Myeongjo&display=swap" rel="stylesheet">
+	
+</head>
+
+<body>
+
+	<div class="logo">
+		<a href='/'><img src="{% static "info/logo.png" %}" alt="Mind Reading" height="120" width="300" id="logo" class="center"></a>
+	</div>
+	
+	<div class="signup_form">
+		<center>
+			<form method="post">
+				{%csrf_token%}
+				<table>
+					<tr><td>Input ID</td><td>{{signup_form.user_id}}</td></tr>
+					<tr><td>Input password</td><td>{{signup_form.password}}</td></tr>
+					<tr><td>Verify password</td><td>{{signup_form.password2}}</td></tr>
+					<tr><td>Input Email</td><td>{{signup_form.email}}</td></tr>
+				</table>
+				<input type="submit" value="Sign up" class="button"/>
+				{% if error_message %}<script>alert("{{error_message}}");</script>{% endif %}
+				{% if approve_message %}<script>alert("{{approve_message}}");window.location = '/';</script>{% endif %}
+			</form>
+		</center>
+	</div>
+	
+</body>
+
+</html>

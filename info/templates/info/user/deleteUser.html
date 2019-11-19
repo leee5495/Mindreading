@@ -1,0 +1,58 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+	<style>
+		body {
+			font-family: 'Nanum Myeongjo', serif;
+		}
+		.button {
+			background-color: #ffffff;
+			border: 0.5px solid #aaaaaa;
+			color: black;
+			padding: 4px 12px;
+			text-align: center;
+			text-decoration: none;
+			display: inline-block;
+			font-size: 15px;
+			border-radius: 2px;
+			height: 30px;
+		}
+		.button:hover {
+			background-color: #aaaaaa;
+			color: white;
+		}
+	</style>
+	
+	<link href="https://fonts.googleapis.com/css?family=Nanum+Myeongjo&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div>
+        <h3>회원 탈퇴</h3>
+    </div>
+	
+	<form method="POST" action="/mypage/deleteUser/">
+		<table>
+		{% csrf_token %}
+			<tr>
+				<td>아이디: </td>
+				<td>{{user.username}}</td>
+				<input type="hidden" name="user" value="{{user.username}}">
+			</tr>
+			<tr>
+				<td>비밀번호: </td>
+				<td><input type="password" name="pw"></td>
+			</tr>
+		</table>
+		
+		{%if error %}
+		<p>{{ error }}</p>
+		{% endif %}
+		
+		<br>
+		<input type="submit" value="확인" class="button">
+		<button class="button" onclick="window.close();">취소</button>
+    </form>
+	
+</body>
+</html>

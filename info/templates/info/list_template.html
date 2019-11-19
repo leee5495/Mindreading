@@ -1,0 +1,309 @@
+﻿{%extends "info/base_template.html"%}
+{% load humanize %}
+
+{%block title%}list_template{%endblock%}
+
+{%block style%}
+	{{block.super}}
+	
+	ul.listHorizontal {
+		display: flex;
+		justify-content: space-around;
+		list-style: none;
+	}
+	
+	table.filter_table {
+		border-spacing:0 10px;
+	}
+	div.filter_toggle {
+		float: right;
+		position: relative;
+		display: inline-block;
+	}
+	div.filter {
+		padding: 10px;
+		display: none;
+		position: absolute;
+		background-color: #fafafa;
+		right: 0;
+		box-shadow: 0px 2px 4px 0px rgba(0,0,0,0.2);
+		width: 460px;
+	}
+	
+	.option_button {
+		background-color: #ffffff;
+		border: 0.5px solid #aaaaaa;
+		color: black;
+		padding: 2px 10px;
+		text-align: center;
+		text-decoration: none;
+		display: inline-block;
+		font-size: 12px;
+		height: 20px;
+	}
+	.option_button:hover {
+		-webkit-box-shadow: inset 1px 1px 2px #666;
+		-moz-box-shadow:    inset 1px 1px 2px #666;
+		box-shadow:         inset 1px 1px 2px #666;
+	}
+	
+	div.pagination {
+		font-size: 14px;	
+		padding-bottom: 30px;
+		padding-top: 60px;
+		text-align: center;
+	}
+	.pagination a {
+		color: black;
+		float: none;
+		padding: 8px 16px;
+		text-decoration: none;
+		
+		border: 1px solid #ddd; /* Gray */
+		margin: 0 0px;
+	}
+	.pagination a.active {
+		background-color: #269885;
+		color: white;
+	}
+	.pagination a:hover:not(.active):not(.disabled) {
+		background-color: #ddd;
+	}
+	
+	.datepicker-panel{
+		width: 100%;
+	}
+
+{%endblock%}
+
+{%block scripts%}
+	{{block.super}}	
+	
+	<script type="text/javascript">
+		$(function() {
+			var min = document.getElementById("id_min_price").value||0;
+			var max = document.getElementById("id_max_price").value||100000;
+			
+			$("#price_slider").slider({
+				range:true,
+				min: 0,
+				max: 100000,
+				values: [min, max],
+				step: 1000,
+				slide: function( event, ui ) {
+					$("#id_min_price").val(ui.values[0]);
+					$("#id_max_price").val(ui.values[1]);
+				}
+			});
+		});
+	</script>
+	<!--
+	<script type="text/javascript">
+		$(function() {
+			var min = document.getElementById("id_min_rating").value||0;
+			
+			$("#rating_slider").slider({
+				range: false,
+				min: 0,
+				max: 5,
+				values: [min],
+				step: 0.25,
+				slide: function( event, ui ) {
+					$("#id_min_rating").val(ui.values[0]);
+				}
+			});
+		});
+	</script>
+	
+	<script type="text/javascript">
+		$(function() {
+			var min = document.getElementById("id_min_num_rating").value||0;
+			
+			$("#num_rating_slider").slider({
+				range:false,
+				min: 0,
+				max: 200,
+				values: [min],
+				step: 10,
+				slide: function( event, ui ) {
+					$("#id_min_num_rating").val(ui.values[0]);
+				}
+			});
+		});
+	</script>
+	-->
+	<script>
+		function filterToggle() {
+			var x = document.getElementById("filter");
+			if (x.style.display === "none") {
+				x.style.display = "block";
+				document.getElementById('opt_button').innerText = '옵션설정 ▲';
+			} else {
+				x.style.display = "none";
+				document.getElementById('opt_button').innerText = '옵션설정 ▼';
+			}
+		}
+	</script>
+	
+	<script>
+		function filterReset() {
+			$("#id_min_price").val(null)
+			$("#id_max_price").val(null)
+			$("#price_slider").slider('values',[0, 100000]);
+			$("#id_min_num_rating").val(null)
+			$("#num_rating_slider").slider('values',[0]);
+			$("#id_min_rating").val(null)
+			$("#rating_slider").slider('values',[0]);
+			$("#id_from_date").val(null)
+			$("#id_to_date").val(null)
+			$("#id_filter_keyword").val(null)
+		}
+	</script>		
+	
+	<script>
+		$(document).on('input', '#id_min_price', function() {
+			var x = document.getElementById("id_min_price").value||0;
+			var y = document.getElementById("id_max_price").value||100000;
+			$("#price_slider").slider('values',[x,y]);
+		});
+		$(document).on('input', '#id_max_price', function() {
+			var x = document.getElementById("id_min_price").value||0;
+			var y = document.getElementById("id_max_price").value||100000;
+			$("#price_slider").slider('values',[x,y]);
+		});
+		$(document).on('input', '#id_min_rating', function() {
+			var x = document.getElementById("id_min_rating").value||0;
+			$("#num_rating_slider").slider('values',[x]);
+		});
+		$(document).on('input', '#id_min_num_rating', function() {
+			var x = document.getElementById("id_min_num_rating").value||0;
+			$("#num_rating_slider").slider('values',[x]);
+		});
+	</script>
+{%endblock%}
+
+{%block sidebar%}
+	<div style="padding: initial;">
+		{%block genre_menu%}
+		{%endblock%}
+		
+		<div class="sidebar" style="padding: initial;">
+			{%if sort_order%}
+				<div class="sort_order" style="padding: initial;">
+					<form method="post">
+						{%csrf_token%}
+						<table style="float:right; padding: initial;"><tr>
+							<td>{{sort_order.sort_order}}</td>
+							{%if is_listview%}
+							<td>{{sort_order.view_by}}</td>
+							{%endif%}
+							<td><input type="submit" value="Sort" class="option_button"/></td>
+						</tr></table>
+					</form>
+				</div>
+			{%endif%}
+			
+			{%if filter%}
+				<div class="filter_toggle" style="text-align:right; padding: initial;">
+					<button class="option_button" onclick="filterToggle()" id="opt_button">옵션설정 ▼</button>
+					<div class="filter" id="filter">
+						<form method="post" autocomplete="off">
+							{%csrf_token%}
+							<table class="filter_table">
+								<tr>
+									<td>가격: </td>
+									<td>{{filter.min_price}}원 ~ {{filter.max_price}}원 <br></td>
+								</tr>
+								<tr>
+									<td></td><td><div id = "price_slider" style="width: 300px;"></div></td>
+								</tr>
+								<!--
+								<tr>
+									<td>평점: </td>
+									<td>{{filter.min_rating}} <br></td>
+								</tr>
+								<tr>
+									<td></td><td><div id = "rating_slider" style="width: 300px;"></div></td>
+								</tr>
+								<tr>
+									<td>리뷰수: </td>
+									<td>{{filter.min_num_rating}} <br></td>
+								</tr>
+								<tr>
+									<td></td><td><div id = "num_rating_slider" style="width: 300px;"></div></td>
+								</tr>
+								-->
+								<tr>
+									<td>출판일: </td>
+									<td>{{filter.from_date}} ~ {{filter.to_date}} <br></td>
+								</tr>
+								<tr>
+									<td>키워드: </td>
+									<td>{{filter.filter_keyword}} <br></td>
+								</tr>
+								<tr>
+									<td>
+									</td>
+									<td>
+										<input type="submit" value="Search" name="filter" class="option_button"/>
+										<button type="button" id="filter_reset_btn" onclick="filterReset()" class="option_button">Reset</button>
+										<input type="submit" value="옵션제거" name="reset" class="option_button"/>
+									</td>
+								</tr>
+							</table>
+							
+						</form>
+					</div>
+				</div>
+			{%endif%}
+		</div>
+	</div>
+{%endblock%}
+
+
+{%block content%}
+	{%block pagination%}
+		{% if is_paginated %}
+			<div class="pagination">
+				{% if page_obj.has_previous %}
+					{% if page_obj.number|add:'-4' > 1 %}
+						<a href="?page={{ page_obj.number|add:'-5' }}">&laquo;</a>
+					{% elif page_obj.number > 1%}
+						<a href="?page=1">&laquo;</a>
+					{% else %}
+						<a class="disabled">&laquo;</a>
+					{% endif %}
+					<a href="?page=1">&lsaquo;</a>
+				{% else %}
+					<a class="disabled">&laquo;</a>
+					<a class="disabled">&lsaquo;</a>
+				{% endif %}
+
+				{% for i in page_obj.paginator.page_range %}
+					{% if page_obj.number == i %}
+						<a class="active" href="?page={{i}}"><span>{{ i }}</span></a>
+					{% elif i > page_obj.number|add:'-5' and i < page_obj.number|add:'5' %}
+						<a href="?page={{ i }}">{{ i }}</a>
+					{% endif %}
+				{% endfor %}
+
+				{% if page_obj.has_next %}
+					<a href="?page={{ page_obj.next_page_number }}">&rsaquo;</a>
+					{% if page_obj.paginator.num_pages > page_obj.number|add:'4' %}
+						<a href="?page={{ page_obj.number|add:'5' }}">&raquo;</a>
+					{% elif page_obj.number > 1%}
+						<a href="?page={{ page_obj.paginator.num_pages}}">&raquo;</a>
+					{% else %}
+						<a class="disabled">&raquo;</a>
+					{% endif %}
+				{% else %}
+					<a class="disabled">&rsaquo;</a>
+					<a class="disabled">&raquo;</a>
+				{% endif %}
+
+			</ul>
+
+		{% endif %}
+	{%endblock%}
+{%endblock%}
+

@@ -1,0 +1,27 @@
+{%extends "info/list_template.html"%}
+
+{%block title%}상세검색{%endblock%}
+
+{%block style%}
+	{{block.super}}	
+{%endblock%}
+
+{%block content%}
+
+	{%if detail_search_form%}
+		<div style="padding: 10px;">
+			<form method="post">
+				{%csrf_token%}
+				<table style="margin-left:30px; padding: 20px">
+					<tr><td>Title: </td><td>{{detail_search_form.title}}</td></tr>
+					<tr><td>Author: </td><td>{{detail_search_form.author}}</td></tr>
+					<tr><td>Publisher: </td><td>{{detail_search_form.publisher}}</td></tr>
+					<tr><td>Keyword: </td><td>{{detail_search_form.keyword}}</td></tr>
+					<tr><td>ISBN: </td><td>{{detail_search_form.ISBN}}</td></tr>
+				</table>
+				<button type="submit" class="button" style="margin-left: 190px; width: 100px">검색</button>
+			</form>
+		</div>
+	{%endif%}
+	
+{%endblock%}

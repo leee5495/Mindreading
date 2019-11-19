@@ -1,0 +1,140 @@
+﻿{%extends "info/list_template.html"%}
+{% load humanize %}
+{% load staticfiles %}
+{% load static %}
+
+{%block title%}Book List{%endblock%}
+
+{%block style%}
+	{{block.super}}
+	
+	h2.listname {
+		text-align: center;
+	}
+	
+	/* Dropdown Button */
+	.dropbtn {
+		font-family: 'Nanum Myeongjo', serif;
+		background-color: #269885;
+		opacity: 0.75;
+		border: 0.5px solid white;
+		color: white;
+		padding: 5 13px;
+		font-size: 15px;
+	}
+	/* The container <div> - needed to position the dropdown content */
+	.dropdown {
+		position: relative;
+		display: inline-block;
+		float: left;
+		font-size: 14px;
+		padding: 2px;
+		width: auto;
+	}
+	/* Dropdown Content (Hidden by Default) */
+	.dropdown-content {
+		display: none;
+		position: absolute;
+		background-color: #f1f1f1;
+		width: 200px;
+		max-height: 350px;
+		overflow: auto;
+		box-shadow: 0px 4px 8px 0px rgba(0,0,0,0.2);
+		z-index: 1;
+	}
+	/* Links inside the dropdown */
+	.dropdown-content a {
+		color: black;
+		padding: 10px 12px;
+		text-decoration: none;
+		display: block;
+	}
+	.dropdown-content a:hover {
+		background-color: #ddd;
+	}
+	.dropdown:hover .dropdown-content {
+		display: block;
+	}
+	.dropdown:hover .dropbtn {
+		background-color: #878787;
+	}
+	
+	
+	.wrapper {
+		display: -ms-inline-grid;
+		display: grid;
+		grid-template-columns: 166px 166px 166px 166px 166px;
+		grid-gap: 10px;
+		color: #444;
+		padding: 10px;
+	}
+	.box {
+		padding: 10px;
+		font-size: 150%;
+	}
+	table.book_box {
+		table-layout:fixed;
+	}
+	table.book_box td {
+		width:160px; 
+		word-wrap:break-word;
+	}
+	table.book_box tr.image {
+		height: 230px;
+	}
+	table.book_box tr.title {
+		height: 50px;
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+	table.book_box tr.price {
+		height: 30px;
+		padding-left: 10px;
+		padding-right: 10px;
+	}
+	
+
+{%endblock%}
+
+{%block genre_menu%}
+	{{block.super}}
+	{%for key, values in genre_menu.items%}
+		<div class="dropdown" style="text-align:left; float: left; padding: 0px;">
+			<button class="dropbtn">{{key}}</button>
+				{%if values.count > 0%}
+					<div class="dropdown-content">
+						{%for child_genre in values%}
+							<a href="{%url 'info:book_list_genre' child_genre.id sort_order.sort_order.value sort_order.view_by.value filter.min_price.value filter.max_price.value filter.from_date.value|date:'Y/m/d'|default:'None' filter.to_date.value|date:'Y/m/d'|default:'None' filter.filter_keyword.value%}">{{child_genre.name}}</a>
+						{%endfor%}
+					</div>
+				{%endif%}
+		</div>
+	{%endfor%}
+{%endblock%}
+
+
+{%block content%}
+	<div class="wrapper">
+		{%for object in object_list%}
+			<div class="box">
+				<table class="book_box">
+					<tr class="image"><td>
+						<a href="{%url 'info:book_detail' object.id%}"><image src={{object.image_src}} height="220" width="160" style="border: 1px solid #bbbbbb;"></a>
+					</td></tr>
+					<tr class="title"><td>
+						<b><a href="{%url 'info:book_detail' object.id%}">{{object.title}}</a></b>
+					</td></tr>
+					<tr class="price"><td>
+						{{object.sale_price|intcomma}}원
+					</td></tr>
+				</table>
+			</div>
+		{%endfor%}
+	</div>
+		
+	{%block pagination%}
+		{{block.super}}
+	{%endblock%}
+	
+{%endblock content%}
+
