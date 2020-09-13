@@ -71,18 +71,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'mindreading.wsgi.application'
 
-
 DATABASES = {
-	'default': {
-		'ENGINE': 'django.db.backends.mysql',
-		'HOST': '127.0.0.1',
-		'PORT': '3306',
-		'NAME': 'mindreading_db',
-		'USER': 'root',
-       'PASSWORD': '970909',
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': 'mydatabase',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
