@@ -1,4 +1,3 @@
-
 function incorrect() {
 alert("incorrect!");
 }
