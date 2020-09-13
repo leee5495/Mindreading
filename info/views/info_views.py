@@ -614,7 +614,6 @@ class RecommendationView(TemplateView):
             temp_ = User_Book_Like(user=user, book=book, time=datetime.datetime.now())
             temp_.save()
             return JsonResponse({'m': "success"})
-        
         elif request.POST.get("name")=="unlike":
             book_id = request.POST.get("val")
             book = Book.objects.get(pk=book_id)

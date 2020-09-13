@@ -15,10 +15,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from django.conf.urls import url
 from django.urls import path
-from info.views import info_views, search_views, user_views
+from django.conf.urls import url
 from django.contrib.auth import views as auth_views
+from info.views import info_views, search_views, user_views
 
 app_name = 'info'
 
@@ -60,7 +60,3 @@ urlpatterns= [
                 # recommenation page
                 url(r'^recommend/page="(?P<page_id>\d+)"/$', info_views.RecommendationView.as_view(), name='recommend'),
               ]
-
-
-
-

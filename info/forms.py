@@ -73,7 +73,3 @@ class FilterForm(forms.Form):
         if not min_price and not max_price and not from_date and not to_date and not filter_keyword: # and not min_rating and not min_num_rating
             raise forms.ValidationError('적어도 하나의 값을 입력하세요')
         return self.cleaned_data
-            
-    
-            
-            
