@@ -13,12 +13,11 @@ from django.http import HttpResponseRedirect, JsonResponse
 
 from info.forms import SearchForm, ReviewForm, SortOrderForm, FilterForm
 from info.models import Aladin_User, Book, Aladin_User_Book, Author, Genre, Publisher, Book_Author, Book_Genre, Book_Publisher, User_Book, User_Book_Like
+from info.views.module.dhrbm import DHRBM
 
-from module.dhrbm import DHRBM
 
 User = get_user_model()
 
-#modelpath = "info/views/models"
 modelpath = "./model"
 
 len_rating = 5992
