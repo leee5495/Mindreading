@@ -1,2 +1,2 @@
 # Mindreading
-Graduation project on RBM based recommendation system using Aladin.co.kr book ratings data
+Django project for book recommendation website using [Distributed Heterogeneous RBM](https://github.com/leee5495/Distributed_Heterogeneous_RBM)
