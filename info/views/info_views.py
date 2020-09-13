@@ -1,6 +1,4 @@
 import re
-import os
-import pickle
 import datetime
 import numpy as np
 
@@ -16,10 +14,12 @@ from django.http import HttpResponseRedirect, JsonResponse
 from info.forms import SearchForm, ReviewForm, SortOrderForm, FilterForm
 from info.models import Aladin_User, Book, Aladin_User_Book, Author, Genre, Publisher, Book_Author, Book_Genre, Book_Publisher, User_Book, User_Book_Like
 
+from module.dhrbm import DHRBM
 
 User = get_user_model()
 
-modelpath = "info/views/models"
+#modelpath = "info/views/models"
+modelpath = "./model"
 
 len_rating = 5992
 num_author = 2850
@@ -375,7 +375,7 @@ class GridDetailView(ListView):
             return HttpResponseRedirect(reverse('info:grid_detail_sorted', args=(detail_type, search_id, sort_order, view_by)))  
 
 
-#### RECOMMENDATION VIEW
+# for recommendation result view
 class RecommendationView(TemplateView):
     template_name = 'info/recommendation.html'
     
@@ -412,85 +412,52 @@ class RecommendationView(TemplateView):
             temp_trending['추리/미스테리 소설'] = {'objects': Book.objects.filter(pk__in=Book_Genre.objects.filter(genre=genre).values('book')).annotate(
                                                     num_reviews=Count('aladin_user_book', filter=Q(aladin_user_book__time__gt=datetime.datetime.today()-datetime.timedelta(days=365)))
                                                     +Count('user_book', filter=Q(user_book__time__gt=datetime.datetime.today()-datetime.timedelta(days=365)))).order_by('-num_reviews')[:50],
-                                            'id': 91}
+                                                  'id': 91}
             genre = Genre.objects.get(pk=99)
             temp_trending['판타지/환상문학'] = {'objects': Book.objects.filter(pk__in=Book_Genre.objects.filter(genre=genre).values('book')).annotate(
                                                     num_reviews=Count('aladin_user_book', filter=Q(aladin_user_book__time__gt=datetime.datetime.today()-datetime.timedelta(days=365)))
                                                     +Count('user_book', filter=Q(user_book__time__gt=datetime.datetime.today()-datetime.timedelta(days=365)))).order_by('-num_reviews')[:50],
-                                          'id': 99}
+                                               'id': 99}
             genre = Genre.objects.get(pk=41)
             temp_trending['로맨스 소설'] = {'objects': Book.objects.filter(pk__in=Book_Genre.objects.filter(genre=genre).values('book')).annotate(
                                                     num_reviews=Count('aladin_user_book', filter=Q(aladin_user_book__time__gt=datetime.datetime.today()-datetime.timedelta(days=365)))
                                                     +Count('user_book', filter=Q(user_book__time__gt=datetime.datetime.today()-datetime.timedelta(days=365)))).order_by('-num_reviews')[:50],
-                                        'id': 41}
+                                           'id': 41}
             genre = Genre.objects.get(pk=95)
             temp_trending['테마문학'] = {'objects': Book.objects.filter(pk__in=Book_Genre.objects.filter(genre=genre).values('book')).annotate(
                                                     num_reviews=Count('aladin_user_book', filter=Q(aladin_user_book__time__gt=datetime.datetime.today()-datetime.timedelta(days=365)))
                                                     +Count('user_book', filter=Q(user_book__time__gt=datetime.datetime.today()-datetime.timedelta(days=365)))).order_by('-num_reviews')[:50],
-                                      'id': 95}
+                                         'id': 95}
             context['rec_list'] = temp_trending
         elif rec_type == "best":
             temp_bestseller = {}
             genre = Genre.objects.get(pk=91)
             temp_bestseller['추리/미스테리 소설'] = {'objects': Book.objects.filter(pk__in=Book_Genre.objects.filter(genre=genre).values('book')).annotate(
                                                     num_reviews=Count('aladin_user_book')+Count('user_book')).order_by('-num_reviews')[:50],
-                                              'id': 91}
+                                                    'id': 91}
             genre = Genre.objects.get(pk=99)
             temp_bestseller['판타지/환상문학'] = {'objects': Book.objects.filter(pk__in=Book_Genre.objects.filter(genre=genre).values('book')).annotate(
                                                     num_reviews=Count('aladin_user_book')+Count('user_book')).order_by('-num_reviews')[:50],
-                                            'id': 99}
+                                                 'id': 99}
             genre = Genre.objects.get(pk=41)
             temp_bestseller['로맨스 소설'] = {'objects': Book.objects.filter(pk__in=Book_Genre.objects.filter(genre=genre).values('book')).annotate(
                                                     num_reviews=Count('aladin_user_book')+Count('user_book')).order_by('-num_reviews')[:50],
-                                          'id': 41}
+                                             'id': 41}
             genre = Genre.objects.get(pk=95)
             temp_bestseller['테마문학'] = {'objects': Book.objects.filter(pk__in=Book_Genre.objects.filter(genre=genre).values('book')).annotate(
                                                     num_reviews=Count('aladin_user_book')+Count('user_book')).order_by('-num_reviews')[:50],
-                                        'id': 95}
+                                           'id': 95}
             context['rec_list'] = temp_bestseller
         return context
     
-    def sample_hidden(self, input_data, weights):
-        input_data = np.reshape(input_data, (1,-1))
-        hidden = np.matmul(input_data, weights['W']) + weights['b_h']
-        hidden = 1/(1 + np.exp(-hidden)) 
-        return hidden
-    
-    def prediction(self, input_data, weights):
-        hidden = np.matmul(input_data, weights[0]) + weights[1]
-        hidden = np.maximum(hidden, 0)
-        hidden = np.matmul(hidden, weights[2]) + weights[3]
-        pred = 1/(1 + np.exp(-hidden)) 
-        return pred
-
-    def get_recommendation_set(self):
-        with open(os.path.join(modelpath, "ensemble_cluster_rbm_keras"), "rb") as fp:
-            ensemble_cluster_rbm_model = pickle.load(fp)
-        
-        with open(os.path.join(modelpath, "ensemble_rbm1_keras"), "rb") as fp:
-            ensemble_rbm1_model = pickle.load(fp)
-        
-        with open(os.path.join(modelpath, "ensemble_rbm2_keras"), "rb") as fp:
-            ensemble_rbm2_model = pickle.load(fp)
-        
-        with open(os.path.join(modelpath, "ensemble_rbm3_keras"), "rb") as fp:
-            ensemble_rbm3_model = pickle.load(fp)
-        
-        with open(os.path.join(modelpath, "ensemble_model_weights"), "rb") as fp:
-            ensemble_model_weights = pickle.load(fp)
-            
-        with open(os.path.join(modelpath, "ensemble_kmeans"), "rb") as fp:
-            ensemble_kmeans = pickle.load(fp)
-          
-        # get user_book interactions
+    def get_user_vec(self):
         user = self.request.user
         user_book = list(User_Book.objects.filter(user=user))
-        
+        # initial vec
         temp_rating = np.zeros((len_rating,))
         temp_author = np.zeros((num_author,))
         temp_genre = np.zeros((num_genre,))
         temp_publisher = np.zeros((num_publisher))
-        
         for i in user_book:
             # update temp rating vect
             book = i.book
@@ -500,7 +467,6 @@ class RecommendationView(TemplateView):
                 temp_rating[book_rec_id] = rating
             else:
                 rating = i.rating/5
-               
             # update meta vect
             authors = [j.author for j in list(Book_Author.objects.filter(book=book))]
             for j in authors:
@@ -514,24 +480,26 @@ class RecommendationView(TemplateView):
             for j in publishers:
                 if j.rec_id:
                     temp_publisher[j.rec_id] = max(temp_publisher[j.rec_id], rating)
-                    
-        user_rbm_input = [np.concatenate([temp_rating, temp_author, temp_genre, temp_publisher], axis=0)]
-        
-        ensemble_rbm1_hidden = self.sample_hidden(user_rbm_input, ensemble_rbm1_model)
-        ensemble_rbm2_hidden = self.sample_hidden(user_rbm_input, ensemble_rbm2_model)
-        ensemble_rbm3_hidden = self.sample_hidden(user_rbm_input, ensemble_rbm3_model)
-        ensemble_cluster_rbm_hidden = self.sample_hidden(user_rbm_input, ensemble_cluster_rbm_model)
-        
-        ensemble_test_input = np.concatenate([ensemble_rbm1_hidden, ensemble_rbm2_hidden, ensemble_rbm3_hidden, ensemble_kmeans.transform(ensemble_cluster_rbm_hidden)], axis=1)
-        
-        ensemble_prediction = self.prediction(ensemble_test_input, ensemble_model_weights)[0,:len_rating]
-        ensemble_prediction = ensemble_prediction*np.where(temp_rating!=0,0,1)   
+        user_rbm_input = np.concatenate([temp_rating, temp_author, temp_genre, temp_publisher], axis=0)
+        user_rbm_input = np.reshape(user_rbm_input, (1,-1))
+        return user_rbm_input, temp_rating
+
+    def get_recommendation_set(self):
+        num_visible = len_rating + num_author + num_genre + num_publisher
+        num_hidden = 256
+        k = 5
+        num_cluster = 3
+        dhrbm = DHRBM(num_visible, num_hidden, k, num_cluster)
+        dhrbm.load_model(modelpath)
+        user_rbm_input, org_rating = self.get_user_vec()
+
+        prediction = dhrbm.predict(user_rbm_input)[0, :len_rating]
+        prediction = prediction * np.where(org_rating!=0, 0, 1)
            
-        ranks = np.argsort(-ensemble_prediction)[:200]
+        ranks = np.argsort(-prediction)[:200]
         preserved = Case(*[When(rec_id=rec_id, then=pos) for pos, rec_id in enumerate(ranks)])
         queryset = Book.objects.filter(rec_id__in=ranks).order_by(preserved)
-        
-        return queryset, ensemble_prediction[ranks]
+        return queryset, prediction[ranks]
         
     def post(self, request, *args, **kwargs):
         if request.POST.get("name")=="like":
