@@ -1,10 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Sep 16 13:33:42 2019
-
-@author: 1615055
-"""
-
 import datetime
 
 from django.shortcuts import render

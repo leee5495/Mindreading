@@ -1,23 +1,21 @@
-#cloud_sql_proxy_x64.exe -instances="mindreading:asia-northeast2:mindreadingdb-2019"=tcp:3307
-
-from django.http import HttpResponseRedirect, JsonResponse
-from django.shortcuts import render
-from django.views.generic import TemplateView, ListView
-from django.urls import reverse
-
-from info.models import Aladin_User, Book, Aladin_User_Book, Author, Genre, Publisher, Book_Author, Book_Genre, Book_Publisher, User_Book, User_Book_Like
-from django.contrib.auth import get_user_model
-from info.forms import SearchForm, ReviewForm, SortOrderForm, FilterForm
-
-from django.db.models import Q, Count
-from django.db.models import Avg
-from django.db.models import Case, When
-
-import datetime
 import re
 import os
 import pickle
+import datetime
 import numpy as np
+
+from django.db.models import Avg
+from django.db.models import Q, Count
+from django.db.models import Case, When
+from django.urls import reverse
+from django.shortcuts import render
+from django.contrib.auth import get_user_model
+from django.views.generic import TemplateView, ListView
+from django.http import HttpResponseRedirect, JsonResponse
+
+from info.forms import SearchForm, ReviewForm, SortOrderForm, FilterForm
+from info.models import Aladin_User, Book, Aladin_User_Book, Author, Genre, Publisher, Book_Author, Book_Genre, Book_Publisher, User_Book, User_Book_Like
+
 
 User = get_user_model()
 
@@ -27,6 +25,7 @@ len_rating = 5992
 num_author = 2850
 num_genre = 164
 num_publisher = 751
+
 
 def get_user(request):
     if request.COOKIES.get('username') is not None:
@@ -58,29 +57,15 @@ def filter_queryset(kwargs, queryset):
     if 'min_price' in kwargs and kwargs.get('min_price')!='None':
         min_price = int(kwargs.get('min_price'))
         queryset = queryset.filter(sale_price__gte=min_price)
-                
     if 'max_price' in kwargs and kwargs.get('max_price')!='None':
         max_price = int(kwargs.get('max_price'))
         queryset = queryset.filter(sale_price__lte=max_price)
-            
     if 'from_date' in kwargs and kwargs.get('from_date')!='None':
         from_date = datetime.datetime.strptime(kwargs.get('from_date'), '%Y/%m/%d')
         queryset = queryset.filter(pub_date__gte=from_date)
-                
     if 'to_date' in kwargs and kwargs.get('to_date')!='None':
         to_date = datetime.datetime.strptime(kwargs.get('to_date'), '%Y/%m/%d')
         queryset = queryset.filter(pub_date__lte=to_date)
-    
-    """
-    if 'min_rating' in kwargs and kwargs.get('min_rating')!='None':
-        min_rating = float(kwargs.get('min_rating'))
-        queryset = queryset.filter(avg_reviews__gte=min_rating)
-        
-    if 'min_num_rating' in kwargs and kwargs.get('min_num_rating')!='None': 
-        min_num_rating = int(kwargs.get('min_num_rating'))
-        queryset = queryset.filter(num_reviews__gte=min_num_rating)
-    """
-    
     if 'filter_keyword' in kwargs and kwargs.get('filter_keyword')!='None':
         filter_keyword = kwargs.get('filter_keyword')
         for i in re.split('[,|;][ ]*|[ ]+',filter_keyword):
@@ -107,7 +92,6 @@ def get_filter(kwargs):
     #min_rating = float(kwargs.get('min_rating')) if kwargs.get('min_rating')!='None' and kwargs.get('min_rating')!=None else None
     #min_num_rating = int(kwargs.get('min_num_rating')) if kwargs.get('min_num_rating')!='None' and kwargs.get('min_num_rating')!=None else None
     filter_keyword = kwargs.get('filter_keyword') if kwargs.get('filter_keyword')!='None' and kwargs.get('filter_keyword')!=None else None
-    
     return FilterForm(data={'min_price':min_price, 'max_price':max_price,
                             'from_date':from_date, 'to_date':to_date,
                             #'min_rating':min_rating, 'min_num_rating':min_num_rating,
@@ -122,7 +106,6 @@ class BookListView(ListView):
     
     def get_context_data(self, **kwargs):
         context = super(BookListView, self).get_context_data(**kwargs)
-        
         context['genre_menu'] = {'장르': Genre.objects.filter(parent__isnull=True).annotate(num_books=Count('book_genre')).order_by('-num_books')}
         if 'genre_id' in self.kwargs:
             genre_id = self.kwargs.get('genre_id')
@@ -136,62 +119,48 @@ class BookListView(ListView):
                 cur_genre = parent
             for i in range(len(path)):
                 context['genre_menu'][path[i].name] = Genre.objects.filter(parent=path[i]).annotate(num_books=Count('book_genre')).order_by('-num_books')
-                
         ID, PW = get_user(self.request)
         if ID is not None:
             context['user'] = ID
         else: 
             context['user'] = False
-            
         context['sort_order'] = get_sort_order(self.kwargs)
         context['filter'] = get_filter(self.kwargs)
         context['search_form'] = SearchForm()
         context['is_listview'] = True
-        
         return context
     
     def get_queryset(self, **kwargs):
         queryset = Book.objects.all()
-        
         if 'genre_id' in self.kwargs:
             genre_id = self.kwargs.get('genre_id')
             genre = Genre.objects.get(pk=genre_id)
             book_genre = Book_Genre.objects.filter(book__in=queryset)
             queryset = queryset.filter(pk__in=book_genre.filter(genre=genre).values('book'))
-        
         if 'sort_order' in self.kwargs:
             sort_by = self.kwargs.get('sort_order')
             queryset = sort_queryset(sort_by, queryset)
-        
         if 'view_by' in self.kwargs:
             view_by = self.kwargs.get('view_by')
             self.paginate_by = int(view_by)
-            
         queryset = filter_queryset(self.kwargs, queryset)
-            
         return queryset
     
     def post(self, request, *args, **kwargs):
         sort_order_form = SortOrderForm(request.POST or None)
         filter_form = FilterForm(request.POST or None)
-        
         genre_id = self.kwargs.get('genre_id')
-        
         sort_by = self.kwargs.get('sort_order')
         view_by = self.kwargs.get('view_by')
         if not sort_by:
             sort_by = '1'
         if not view_by:
             view_by = '30'
-        
         min_price = self.kwargs.get('min_price')
         max_price = self.kwargs.get('max_price')
         from_date = self.kwargs.get('from_date')
         to_date = self.kwargs.get('to_date')
-        #min_rating = self.kwargs.get('min_rating')
-        #min_num_rating = self.kwargs.get('min_num_rating')
         filter_keyword = self.kwargs.get('filter_keyword')
-        
         if sort_order_form.is_valid():    
             sort_by = sort_order_form.cleaned_data['sort_order']
             view_by = sort_order_form.cleaned_data['view_by']
@@ -200,7 +169,6 @@ class BookListView(ListView):
                 return HttpResponseRedirect(reverse('info:book_list_genre', args=(genre_id, sort_by, view_by, min_price, max_price, from_date, to_date, filter_keyword))) #min_rating, min_num_rating, 
             else:
                 return HttpResponseRedirect(reverse('info:book_list_sorted', args=(sort_by, view_by, min_price, max_price, from_date, to_date, filter_keyword))) #min_rating, min_num_rating, 
-            
         elif 'filter' in request.POST:
             if filter_form.is_valid():
                 min_price = filter_form.cleaned_data['min_price']
@@ -216,14 +184,12 @@ class BookListView(ListView):
                 #min_rating = filter_form.cleaned_data.get('min_rating')
                 #min_num_rating = filter_form.cleaned_data.get('min_num_rating')
                 filter_keyword = filter_form.cleaned_data.get('filter_keyword')
-
                 if genre_id:
                     return HttpResponseRedirect(reverse('info:book_list_genre', args=(genre_id, sort_by, view_by, min_price, max_price, from_date, to_date, filter_keyword))) #min_rating, min_num_rating, 
                 else:
                     return HttpResponseRedirect(reverse('info:book_list_sorted', args=(sort_by, view_by, min_price, max_price, from_date, to_date, filter_keyword))) #min_rating, min_num_rating, 
             else:
                 return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-            
         elif 'reset' in request.POST:
             if genre_id:
                 return HttpResponseRedirect(reverse('info:book_list_genre', args=(genre_id, sort_by, view_by, 'None', 'None', 'None', 'None', 'None'))) #'None', 'None', 
@@ -238,13 +204,10 @@ class BookDetailView(TemplateView):
     def get_context_data(self, **kwargs):        
         book_id = self.kwargs.get('pk')
         book = Book.objects.get(pk=book_id)
-        
         book_author = Book_Author.objects.filter(book=book)
         author = [book_author[i].author for i in range(len(book_author))]
-        
         book_genre = Book_Genre.objects.filter(book=book).values('genre')
         genre = Genre.objects.filter(pk__in=book_genre)
-        
         leaf_genres = []
         for i in list(genre):
             leaf = True
@@ -253,7 +216,6 @@ class BookDetailView(TemplateView):
                     leaf=False
             if leaf:
                 leaf_genres.append(i)
-        
         genre_list = []
         for i in leaf_genres:
             node = i
@@ -264,26 +226,21 @@ class BookDetailView(TemplateView):
                 if node is None:
                     break
             genre_list.append(temp)
-        
-        
+			
         book_publisher = Book_Publisher.objects.filter(book=book)[0]
         publisher = book_publisher.publisher
-        
         aladin_user_book = Aladin_User_Book.objects.filter(book=book).order_by('-time')
         user_book = User_Book.objects.filter(book=book).order_by('-time')
         review_form = ReviewForm()
-        
         similar_books = book.lda_sims
         similar_books = similar_books.split(" ")[:-1]
         similar_books = [Book.objects.get(pk=int(i)+1) for i in similar_books]
-        
         context = super(BookDetailView, self).get_context_data(**kwargs)
-        
+		
         ID, PW = get_user(self.request)
         if ID is not None:
             context['user'] = ID
             user = self.request.user
-            
             if User_Book.objects.filter(user=user).filter(book=book):
                 context['reviewed'] = True
                 review_form.fields["review"].initial = "You have already left a review"
@@ -291,7 +248,7 @@ class BookDetailView(TemplateView):
                 context['user_liked'] = True
         else: 
             context['user'] = False
-
+			
         context['object'] = book
         context['object_author'] = author
         context['object_genre'] = genre_list
@@ -301,21 +258,17 @@ class BookDetailView(TemplateView):
         context['review_form'] = review_form
         context['search_form'] = SearchForm()
         context['similar_books'] = similar_books
-        
         return context
     
     def post(self, request, *args, **kwargs):
         form = ReviewForm(data=request.POST)
         ID, PW = get_user(self.request)
         book_id = self.kwargs.get('pk')
-        
         if request.POST.get("delete"):
             book = Book.objects.get(pk=book_id)
             user = self.request.user
-            
             temp_ = User_Book.objects.filter(user=user).filter(book=book)
             temp_.delete()
-            
             return HttpResponseRedirect(request.path_info)
         elif request.POST.get("name")=="like":
             book = Book.objects.get(pk=book_id)
@@ -336,17 +289,14 @@ class BookDetailView(TemplateView):
                 user = self.request.user
                 book = Book.objects.get(pk=self.kwargs.get('pk'))
                 time = datetime.datetime.now()
-                
                 temp_review = User_Book(user=user, book=book, rating=rating, comment=comment, time=time)
                 temp_review.save()
-                
                 return HttpResponseRedirect(request.path_info)
             else:
                 context = self.get_context_data()
                 context['message'] = "Please give more than one star"
                 return render(request, 'info/book_detail.html', context)
   
-    
     
 # for author, genre, publisher detail view
 class GridDetailView(ListView):
@@ -357,9 +307,7 @@ class GridDetailView(ListView):
     def get_queryset(self, **kwargs):
         detail_type = self.kwargs.get('detail_type')
         search_id = self.kwargs.get('pk')
-        
         queryset = []
-        
         if detail_type == "author":
             objects = Author.objects.get(pk=search_id)
             author_book = Book_Author.objects.filter(author=objects).values('book')
@@ -374,25 +322,19 @@ class GridDetailView(ListView):
         else:
             objects = User.objects.get(pk=search_id)
             queryset = User_Book.objects.filter(user=objects)
-        
         if 'sort_order' in self.kwargs:
             sort_by = self.kwargs.get('sort_order')
             queryset = sort_queryset(sort_by, queryset)
-        
         if 'view_by' in self.kwargs:
             view_by = self.kwargs.get('view_by')
             self.paginate_by = int(view_by)
-        
         return queryset
     
     def get_context_data(self, **kwargs):
         context = super(GridDetailView, self).get_context_data(**kwargs)
-        
         detail_type = self.kwargs.get('detail_type')
         search_id = self.kwargs.get('pk')
-        
         objects, subname, is_user = '','', False
-        
         if detail_type == "author":
             objects = Author.objects.get(pk=search_id)
             subname = "이 작가의 책"
@@ -405,20 +347,17 @@ class GridDetailView(ListView):
         else:
             objects = {'name': User.objects.get(pk=search_id).username}
             is_user = True
-        
         if is_user:
             context['sort_order'] = None
         elif 'sort_order' in self.kwargs:
             context['sort_order'] = SortOrderForm(data={'sort_order': self.kwargs.get('sort_order'), 'view_by': self.kwargs.get('view_by')})
         else:
             context['sort_order'] = SortOrderForm(data={'sort_order': '1', 'view_by': '30'})
-        
         ID, PW = get_user(self.request)
         if ID is not None:
             context['user'] = ID
         else: 
             context['user'] = False
-            
         context['object'] = objects
         context['search_form'] = SearchForm()
         context['subname'] = subname
@@ -428,14 +367,11 @@ class GridDetailView(ListView):
     
     def post(self, request, *args, **kwargs):
         sort_order_form = SortOrderForm(data=request.POST)
-        
         detail_type = self.kwargs.get('detail_type')
         search_id = self.kwargs.get('pk')
-        
         if sort_order_form.is_valid():
             sort_order = sort_order_form.cleaned_data['sort_order']
             view_by = sort_order_form.cleaned_data['view_by']
-            
             return HttpResponseRedirect(reverse('info:grid_detail_sorted', args=(detail_type, search_id, sort_order, view_by)))  
 
 
@@ -445,27 +381,22 @@ class RecommendationView(TemplateView):
     
     def get_context_data(self, **kwargs): 
         context = super(RecommendationView, self).get_context_data(**kwargs)
-        
         ID, PW = get_user(self.request)
         page_id = self.kwargs.get('page_id')
         rec_types = ["per_rec", "cur_best", "best"]
-        
         if ID is not None:
             rec_type = rec_types[int(page_id)-1]
             rec_pages = {1: "Personal Recommendation",
                          2: "Recent Bestseller",
                          3: "Bestseller"}
-        
         else: 
             rec_type = rec_types[int(page_id)]
             rec_pages = {1: "Recent Bestseller",
                          2: "Bestseller"}
             context['user'] = False
-          
         context['search_form'] = SearchForm() 
         context['rec_type'] = rec_type
         context['rec_pages'] = rec_pages
-        
         if rec_type == "per_rec":
             user = self.request.user
             context['user'] = ID
@@ -474,54 +405,50 @@ class RecommendationView(TemplateView):
             for i, j in zip(list(rec_list), scores*1000):
                 k = User_Book_Like.objects.filter(user=user).filter(book=i)
                 temp_.append({'rec': i, 'score': j, 'user_liked': k})
-            context['rec_list'] = temp_
-            
+            context['rec_list'] = temp_ 
         elif rec_type == "cur_best":
             temp_trending = {}
             genre = Genre.objects.get(pk=91)
             temp_trending['추리/미스테리 소설'] = {'objects': Book.objects.filter(pk__in=Book_Genre.objects.filter(genre=genre).values('book')).annotate(
                                                     num_reviews=Count('aladin_user_book', filter=Q(aladin_user_book__time__gt=datetime.datetime.today()-datetime.timedelta(days=365)))
                                                     +Count('user_book', filter=Q(user_book__time__gt=datetime.datetime.today()-datetime.timedelta(days=365)))).order_by('-num_reviews')[:50],
-                                                  'id': 91}
+                                            'id': 91}
             genre = Genre.objects.get(pk=99)
             temp_trending['판타지/환상문학'] = {'objects': Book.objects.filter(pk__in=Book_Genre.objects.filter(genre=genre).values('book')).annotate(
                                                     num_reviews=Count('aladin_user_book', filter=Q(aladin_user_book__time__gt=datetime.datetime.today()-datetime.timedelta(days=365)))
                                                     +Count('user_book', filter=Q(user_book__time__gt=datetime.datetime.today()-datetime.timedelta(days=365)))).order_by('-num_reviews')[:50],
-                                               'id': 99}
+                                          'id': 99}
             genre = Genre.objects.get(pk=41)
             temp_trending['로맨스 소설'] = {'objects': Book.objects.filter(pk__in=Book_Genre.objects.filter(genre=genre).values('book')).annotate(
                                                     num_reviews=Count('aladin_user_book', filter=Q(aladin_user_book__time__gt=datetime.datetime.today()-datetime.timedelta(days=365)))
                                                     +Count('user_book', filter=Q(user_book__time__gt=datetime.datetime.today()-datetime.timedelta(days=365)))).order_by('-num_reviews')[:50],
-                                            'id': 41}
+                                        'id': 41}
             genre = Genre.objects.get(pk=95)
             temp_trending['테마문학'] = {'objects': Book.objects.filter(pk__in=Book_Genre.objects.filter(genre=genre).values('book')).annotate(
                                                     num_reviews=Count('aladin_user_book', filter=Q(aladin_user_book__time__gt=datetime.datetime.today()-datetime.timedelta(days=365)))
                                                     +Count('user_book', filter=Q(user_book__time__gt=datetime.datetime.today()-datetime.timedelta(days=365)))).order_by('-num_reviews')[:50],
-                                        'id': 95}
+                                      'id': 95}
             context['rec_list'] = temp_trending
-        
         elif rec_type == "best":
             temp_bestseller = {}
             genre = Genre.objects.get(pk=91)
             temp_bestseller['추리/미스테리 소설'] = {'objects': Book.objects.filter(pk__in=Book_Genre.objects.filter(genre=genre).values('book')).annotate(
                                                     num_reviews=Count('aladin_user_book')+Count('user_book')).order_by('-num_reviews')[:50],
-                                                    'id': 91}
+                                              'id': 91}
             genre = Genre.objects.get(pk=99)
             temp_bestseller['판타지/환상문학'] = {'objects': Book.objects.filter(pk__in=Book_Genre.objects.filter(genre=genre).values('book')).annotate(
                                                     num_reviews=Count('aladin_user_book')+Count('user_book')).order_by('-num_reviews')[:50],
-                                                  'id': 99}
+                                            'id': 99}
             genre = Genre.objects.get(pk=41)
             temp_bestseller['로맨스 소설'] = {'objects': Book.objects.filter(pk__in=Book_Genre.objects.filter(genre=genre).values('book')).annotate(
                                                     num_reviews=Count('aladin_user_book')+Count('user_book')).order_by('-num_reviews')[:50],
-                                              'id': 41}
+                                          'id': 41}
             genre = Genre.objects.get(pk=95)
             temp_bestseller['테마문학'] = {'objects': Book.objects.filter(pk__in=Book_Genre.objects.filter(genre=genre).values('book')).annotate(
                                                     num_reviews=Count('aladin_user_book')+Count('user_book')).order_by('-num_reviews')[:50],
-                                            'id': 95}
+                                        'id': 95}
             context['rec_list'] = temp_bestseller
-           
         return context
-    
     
     def sample_hidden(self, input_data, weights):
         input_data = np.reshape(input_data, (1,-1))
@@ -620,5 +547,4 @@ class RecommendationView(TemplateView):
             user = self.request.user
             temp_ = User_Book_Like.objects.filter(user=user).filter(book=book)
             temp_.delete()
-            return JsonResponse({'m': "success"})
-        
+            return JsonResponse({'m': "success"}) 
