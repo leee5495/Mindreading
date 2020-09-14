@@ -7,6 +7,7 @@ import torch
 import numpy as np
 from sklearn.cluster import KMeans
 
+from keras import backend as K
 from keras.models import Model
 from keras.models import load_model
 from keras.layers import Input, Dense
@@ -109,5 +110,6 @@ class DHRBM:
             
         with open(os.path.join(modelpath, "kmeans"), "rb") as fp:
             self.kmeans = pickle.load(fp)
-            
+        
+        K.clear_session()
         self.ensemble_model = load_model(os.path.join(modelpath, "ensemble_model"))
