@@ -13,7 +13,7 @@ from gensim.similarities import MatrixSimilarity
 from info.models import Aladin_User, Book, Aladin_User_Book, Author, Genre, Publisher, Book_Author, Book_Genre, Book_Publisher
 
 datapath = "./data"
-modelpath = "./models"
+modelpath = "./model"
 
 book = pd.read_csv(os.path.join(datapath, "Book.csv"))
 aladin_user = pd.read_csv(os.path.join(datapath, "Aladin_User.csv"))
@@ -137,8 +137,8 @@ for idx, bid in enumerate(book_id):
         setattr(book, 'rec_id', idx)
         book.save()
     except:
-        print(i)
-        print(j)
+        print(idx)
+        print(bid)
     
 with open(os.path.join(datapath, "author_id"), "r", encoding='utf-8') as fin:
 	author_id = [line.strip() for line in fin] 
@@ -149,8 +149,8 @@ for idx, aid in enumerate(author_id):
             setattr(k, 'rec_id', idx)
             k.save()
     except:
-        print(i)
-        print(j)    
+        print(idx)
+        print(aid)    
     
 with open(os.path.join(datapath, "genre_id"), "r", encoding='utf-8') as fin:
 	genre_id = [line.strip() for line in fin]   
@@ -161,8 +161,8 @@ for idx, gid in enumerate(genre_id):
             setattr(k, 'rec_id', idx)
             k.save()
     except:
-        print(i)
-        print(j)   
+        print(idx)
+        print(gid)   
         
 with open(os.path.join(datapath, "publisher_id"), "r", encoding='utf-8') as fin:
 	publisher_id = [line.strip() for line in fin]
@@ -173,8 +173,8 @@ for idx, pid in enumerate(publisher_id):
             setattr(k, 'rec_id', idx)
             k.save()
     except:
-        print(i)
-        print(j) 
+        print(idx)
+        print(pid) 
 
    
 # PRE_SAVE LDA SIMILAR BOOKS
