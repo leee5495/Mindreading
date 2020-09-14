@@ -7,12 +7,14 @@ Django project for book recommendation website using [Distributed Heterogeneous 
     - unzip `model.zip` to `./model`
   
 2. run `db_update.py` script
-   ```
-   python manage.py shell
-   ```
+   - ```
+     python manage.py shell
+     ```
     - run `db_update.py` line by line in python shell
+   
+   or download `mydatabase.zip` from [here](https://drive.google.com/drive/folders/12QRYrRv2_1wTrJcaAekISDgaawMz64z4?usp=sharing) and unzip `mydatabase` to the root directory (recommended)
   
 3. launch django server
    ```
-   python manage.py shell
+   python manage.py runserver
    ```
